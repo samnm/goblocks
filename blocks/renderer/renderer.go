@@ -51,12 +51,12 @@ func InitGL() {
 	gl.ClearDepth(1.0)
 
 	gl.Enable(gl.TEXTURE_2D)
-	// gl.Enable(gl.CULL_FACE)
+	gl.Enable(gl.CULL_FACE)
 
-	// gl.Enable(gl.DEPTH_TEST)
-	// gl.DepthFunc(gl.LEQUAL)
+	gl.Enable(gl.DEPTH_TEST)
+	gl.DepthFunc(gl.LEQUAL)
 
-	// gl.Hint(gl.PERSPECTIVE_CORRECTION_HINT, gl.NICEST)
+	gl.Hint(gl.PERSPECTIVE_CORRECTION_HINT, gl.NICEST)
 
 	width, height := glfw.WindowSize()
 	SetViewport(width, height)
@@ -103,8 +103,7 @@ const sizeOfGLFloat int = int(unsafe.Sizeof(float32(0.0)))
 func Tick() {
 	timer = float32(glfw.Time())
 
-	// gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-	gl.Clear(gl.COLOR_BUFFER_BIT)
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 	program.Use()
 

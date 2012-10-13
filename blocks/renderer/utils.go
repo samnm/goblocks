@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/draw"
 	_ "image/png"
+	"log"
 	"os"
 )
 
@@ -15,6 +16,27 @@ func MakeBuffer(target gl.GLenum, size int, data interface{}) gl.Buffer {
 	gl.BufferData(target, size, data, gl.STATIC_DRAW)
 	gl.BufferUnbind(target)
 	return buffer
+}
+
+func MakeShader(shaderType gl.GLenum, filename string) gl.Shader {
+	file, err := os.Open(filename)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "[e] %v\n", err)
+	}
+	defer file.Close()
+
+	data := make([]byte, 2048)
+	count, err := file.Read(data)
+	if err != nil {
+		log.Fatal(err)
+	}
+	source := string(data[:count])
+
+	shader := gl.CreateShader(shaderType)
+	shader.Source(source)
+	shader.Compile()
+
+	return shader
 }
 
 func LoadTexture(filename string) (gl.Texture, error) {

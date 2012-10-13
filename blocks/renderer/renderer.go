@@ -17,11 +17,11 @@ var (
 	vertexBuffer  gl.Buffer
 	elementBuffer gl.Buffer
 
-	fadeFactor float32
+	timer float32
 
-	fadeFactorUniform gl.UniformLocation
-	textureUniforms   [2]gl.UniformLocation
-	positionAttrib    gl.AttribLocation
+	timerUniform    gl.UniformLocation
+	textureUniforms [2]gl.UniformLocation
+	positionAttrib  gl.AttribLocation
 )
 
 func Init() {
@@ -47,16 +47,16 @@ func InitGL() {
 
 	gl.ShadeModel(gl.SMOOTH)
 
-	gl.ClearColor(0.0, 0.0, 0.0, 0.0)
+	gl.ClearColor(0.1, 0.1, 0.1, 1.0)
 	gl.ClearDepth(1.0)
 
 	gl.Enable(gl.TEXTURE_2D)
-	gl.Enable(gl.CULL_FACE)
+	// gl.Enable(gl.CULL_FACE)
 
-	gl.Enable(gl.DEPTH_TEST)
-	gl.DepthFunc(gl.LEQUAL)
+	// gl.Enable(gl.DEPTH_TEST)
+	// gl.DepthFunc(gl.LEQUAL)
 
-	gl.Hint(gl.PERSPECTIVE_CORRECTION_HINT, gl.NICEST)
+	// gl.Hint(gl.PERSPECTIVE_CORRECTION_HINT, gl.NICEST)
 
 	width, height := glfw.WindowSize()
 	SetViewport(width, height)
@@ -65,39 +65,8 @@ func InitGL() {
 }
 
 func InitProgram() {
-	vertexShaderSrc := `#version 110
-
-attribute vec2 position;
-
-varying vec2 texcoord;
-
-void main()
-{
-    gl_Position = vec4(position, 0.0, 1.0);
-    texcoord = position * vec2(0.5) + vec2(0.5);
-}`
-	fragShaderSrc := `#version 110
-
-uniform float fade_factor;
-uniform sampler2D textures[2];
-
-varying vec2 texcoord;
-
-void main()
-{
-    gl_FragColor = mix(
-        texture2D(textures[0], texcoord),
-        texture2D(textures[1], texcoord),
-        fade_factor
-    );
-}`
-	vertexShader = gl.CreateShader(gl.VERTEX_SHADER)
-	vertexShader.Source(vertexShaderSrc)
-	vertexShader.Compile()
-
-	fragShader = gl.CreateShader(gl.FRAGMENT_SHADER)
-	fragShader.Source(fragShaderSrc)
-	fragShader.Compile()
+	vertexShader = MakeShader(gl.VERTEX_SHADER, "resources/shaders/view-frustum-rotation.v.glsl")
+	fragShader = MakeShader(gl.FRAGMENT_SHADER, "resources/shaders/hello-gl.f.glsl")
 
 	program = gl.CreateProgram()
 	program.AttachShader(vertexShader)
@@ -107,10 +76,10 @@ void main()
 
 func InitBuffers() {
 	vertexPositions := []float32{
-		-1.0, -1.0,
-		1.0, -1.0,
-		-1.0, 1.0,
-		1.0, 1.0,
+		-1.0, -1.0, 0.0, 1.0,
+		1.0, -1.0, 0.0, 1.0,
+		-1.0, 1.0, 0.0, 1.0,
+		1.0, 1.0, 0.0, 1.0,
 	}
 	indicies := []gl.GLushort{0, 1, 2, 3}
 
@@ -123,22 +92,23 @@ func InitBuffers() {
 }
 
 func InitAttribs() {
-	fadeFactorUniform = program.GetUniformLocation("fade_factor")
+	timerUniform = program.GetUniformLocation("timer")
 	textureUniforms[0] = program.GetUniformLocation("textures[0]")
 	textureUniforms[1] = program.GetUniformLocation("textures[1]")
 	positionAttrib = program.GetAttribLocation("position")
 }
 
-const sizeOfGLFloat int = int(unsafe.Sizeof(aGLfloat))
+const sizeOfGLFloat int = int(unsafe.Sizeof(float32(0.0)))
 
 func Tick() {
-	fadeFactor = float32(math.Sin(glfw.Time())*0.5 + 0.5)
+	timer = float32(glfw.Time())
 
-	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	// gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	gl.Clear(gl.COLOR_BUFFER_BIT)
 
 	program.Use()
 
-	fadeFactorUniform.Uniform1f(fadeFactor)
+	timerUniform.Uniform1f(timer)
 
 	gl.ActiveTexture(gl.TEXTURE0)
 	textures[0].Bind(gl.TEXTURE_2D)
@@ -149,8 +119,7 @@ func Tick() {
 	textureUniforms[1].Uniform1i(1)
 
 	vertexBuffer.Bind(gl.ARRAY_BUFFER)
-	var aGLfloat gl.GLfloat
-	positionAttrib.AttribPointer(2, gl.FLOAT, false, sizeOfGLFloat*2, nil)
+	positionAttrib.AttribPointer(4, gl.FLOAT, false, sizeOfGLFloat*4, nil)
 	positionAttrib.EnableArray()
 
 	elementBuffer.Bind(gl.ELEMENT_ARRAY_BUFFER)

@@ -11,8 +11,8 @@ import (
 
 const (
 	title     = "Goblocks!"
-	appWidth  = 800
-	appHeight = 640
+	appWidth  = 400
+	appHeight = 300
 )
 
 func main() {

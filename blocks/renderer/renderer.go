@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"github.com/go-gl/gl"
 	"github.com/go-gl/glfw"
-	"image"
-	"image/draw"
-	_ "image/png"
 	"math"
 	"os"
 	"unsafe"
@@ -53,16 +50,16 @@ func InitGL() {
 	gl.ClearColor(0.0, 0.0, 0.0, 0.0)
 	gl.ClearDepth(1.0)
 
-	// gl.Enable(gl.TEXTURE_2D)
-	// gl.Enable(gl.CULL_FACE)
+	gl.Enable(gl.TEXTURE_2D)
+	gl.Enable(gl.CULL_FACE)
 
-	// gl.Enable(gl.DEPTH_TEST)
-	// gl.DepthFunc(gl.LEQUAL)
+	gl.Enable(gl.DEPTH_TEST)
+	gl.DepthFunc(gl.LEQUAL)
 
-	// gl.Hint(gl.PERSPECTIVE_CORRECTION_HINT, gl.NICEST)
+	gl.Hint(gl.PERSPECTIVE_CORRECTION_HINT, gl.NICEST)
 
-	// width, height := glfw.WindowSize()
-	// SetViewport(width, height)
+	width, height := glfw.WindowSize()
+	SetViewport(width, height)
 
 	glfw.SetWindowSizeCallback(SetViewport)
 }
@@ -132,10 +129,12 @@ func InitAttribs() {
 	positionAttrib = program.GetAttribLocation("position")
 }
 
+const sizeOfGLFloat int = int(unsafe.Sizeof(aGLfloat))
+
 func Tick() {
 	fadeFactor = float32(math.Sin(glfw.Time())*0.5 + 0.5)
 
-	gl.Clear(gl.COLOR_BUFFER_BIT)
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 	program.Use()
 
@@ -151,7 +150,7 @@ func Tick() {
 
 	vertexBuffer.Bind(gl.ARRAY_BUFFER)
 	var aGLfloat gl.GLfloat
-	positionAttrib.AttribPointer(2, gl.FLOAT, false, int(unsafe.Sizeof(aGLfloat))*2, nil)
+	positionAttrib.AttribPointer(2, gl.FLOAT, false, sizeOfGLFloat*2, nil)
 	positionAttrib.EnableArray()
 
 	elementBuffer.Bind(gl.ELEMENT_ARRAY_BUFFER)
@@ -194,48 +193,4 @@ func SetViewport(width, height int) {
 
 	// Reset the view
 	gl.LoadIdentity()
-}
-
-func MakeBuffer(target gl.GLenum, size int, data interface{}) gl.Buffer {
-	buffer := gl.GenBuffer()
-	buffer.Bind(target)
-	gl.BufferData(target, size, data, gl.STATIC_DRAW)
-	gl.BufferUnbind(target)
-	return buffer
-}
-
-func LoadTexture(filename string) (gl.Texture, error) {
-	r, err := os.Open(filename)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[e] %v\n", err)
-	}
-	defer r.Close()
-
-	img, _, err := image.Decode(r)
-	if err != nil {
-		return 0, err
-	}
-
-	rgbaImg := image.NewNRGBA(img.Bounds())
-	draw.Draw(rgbaImg, img.Bounds(), img, image.ZP, draw.Src)
-
-	tex := gl.GenTexture()
-	tex.Bind(gl.TEXTURE_2D)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-
-	// flip image: first pixel is lower left corner
-	w, h := img.Bounds().Dx(), img.Bounds().Dy()
-	data := make([]byte, w*h*4)
-	lineLen := w * 4
-	dest := len(data) - lineLen
-	for src := 0; src < len(rgbaImg.Pix); src += rgbaImg.Stride {
-		copy(data[dest:dest+lineLen], rgbaImg.Pix[src:src+rgbaImg.Stride])
-		dest -= lineLen
-	}
-	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, data)
-
-	return tex, nil
 }

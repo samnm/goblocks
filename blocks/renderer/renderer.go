@@ -32,12 +32,14 @@ var (
 var (
 	modelViewMatrix  []float32
 	projectionMatrix []float32
+	eyePosition      [3]float32
 	timer            float32
 )
 
 func Init(width, height int) {
 	projectionMatrix = make([]float32, 16)
 	modelViewMatrix = make([]float32, 16)
+	eyePosition = [3]float32{0.0, 0.0, -5.0}
 
 	InitGL()
 
@@ -199,7 +201,6 @@ func UpdateProjectionMatrix(width, height int) {
 }
 
 func UpdateModelViewMatrix() {
-	baseEyePosition := [3]float32{0.0, 0.0, -5.0}
 	modelViewMatrix[0] = 1.0
 	modelViewMatrix[1] = 0.0
 	modelViewMatrix[2] = 0.0
@@ -215,8 +216,8 @@ func UpdateModelViewMatrix() {
 	modelViewMatrix[10] = 1.0
 	modelViewMatrix[11] = 0.0
 
-	modelViewMatrix[12] = -baseEyePosition[0] // - eye_offset[0];
-	modelViewMatrix[13] = -baseEyePosition[1] // - eye_offset[1];
-	modelViewMatrix[14] = -baseEyePosition[2]
+	modelViewMatrix[12] = -eyePosition[0]
+	modelViewMatrix[13] = -eyePosition[1]
+	modelViewMatrix[14] = -eyePosition[2]
 	modelViewMatrix[15] = 1.0
 }

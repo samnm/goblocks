@@ -16,15 +16,31 @@ var (
 	fragShader    gl.Shader
 	vertexBuffer  gl.Buffer
 	elementBuffer gl.Buffer
-
-	timer float32
-
-	timerUniform    gl.UniformLocation
-	textureUniforms [2]gl.UniformLocation
-	positionAttrib  gl.AttribLocation
 )
 
-func Init() {
+var (
+	timerUniform            gl.UniformLocation
+	textureUniforms         [2]gl.UniformLocation
+	modelViewMatrixUniform  gl.UniformLocation
+	projectionMatrixUniform gl.UniformLocation
+)
+
+var (
+	positionAttrib gl.AttribLocation
+)
+
+var (
+	modelViewMatrix  []float32
+	projectionMatrix []float32
+	timer            float32
+)
+
+func Init(width, height int) {
+	projectionMatrix = make([]float32, 16)
+	modelViewMatrix = make([]float32, 16)
+	UpdateProjectionMatrix(width, height)
+	UpdateModelViewMatrix()
+
 	InitGL()
 
 	var err error
@@ -36,9 +52,10 @@ func Init() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[e] %v\n", err)
 	}
+
 	InitProgram()
 	InitBuffers()
-	InitAttribs()
+	InitProperties()
 }
 
 func InitGL() {
@@ -51,7 +68,7 @@ func InitGL() {
 	gl.ClearDepth(1.0)
 
 	gl.Enable(gl.TEXTURE_2D)
-	gl.Enable(gl.CULL_FACE)
+	// gl.Enable(gl.CULL_FACE)
 
 	gl.Enable(gl.DEPTH_TEST)
 	gl.DepthFunc(gl.LEQUAL)
@@ -65,8 +82,8 @@ func InitGL() {
 }
 
 func InitProgram() {
-	vertexShader = MakeShader(gl.VERTEX_SHADER, "resources/shaders/view-frustum-rotation.v.glsl")
-	fragShader = MakeShader(gl.FRAGMENT_SHADER, "resources/shaders/hello-gl.f.glsl")
+	vertexShader = MakeShader(gl.VERTEX_SHADER, "resources/shaders/blocks.vert")
+	fragShader = MakeShader(gl.FRAGMENT_SHADER, "resources/shaders/blocks.frag")
 
 	program = gl.CreateProgram()
 	program.AttachShader(vertexShader)
@@ -91,10 +108,13 @@ func InitBuffers() {
 	elementBuffer = MakeBuffer(gl.ELEMENT_ARRAY_BUFFER, size, indicies)
 }
 
-func InitAttribs() {
+func InitProperties() {
 	timerUniform = program.GetUniformLocation("timer")
 	textureUniforms[0] = program.GetUniformLocation("textures[0]")
 	textureUniforms[1] = program.GetUniformLocation("textures[1]")
+	modelViewMatrixUniform = program.GetUniformLocation("mv_matrix")
+	projectionMatrixUniform = program.GetUniformLocation("p_matrix")
+
 	positionAttrib = program.GetAttribLocation("position")
 }
 
@@ -107,6 +127,8 @@ func Tick() {
 
 	program.Use()
 
+	modelViewMatrixUniform.UniformMatrix4fv(modelViewMatrix)
+	projectionMatrixUniform.UniformMatrix4fv(projectionMatrix)
 	timerUniform.Uniform1f(timer)
 
 	gl.ActiveTexture(gl.TEXTURE0)
@@ -138,27 +160,58 @@ func SetViewport(width, height int) {
 	// Setup our viewport
 	gl.Viewport(0, 0, width, height)
 
-	// change to the projection matrix and set our viewing volume.
-	gl.MatrixMode(gl.PROJECTION)
-	gl.LoadIdentity()
+	UpdateProjectionMatrix(width, height)
+}
 
-	// aspect ratio
-	aspect := float64(width) / float64(height)
+const DegToRad = math.Pi / 180
 
-	// Set our perspective.
-	// This code is equivalent to using gluPerspective as in the original tutorial.
-	fov := 60.0
+func UpdateProjectionMatrix(width, height int) {
+	fov := 60.0 * DegToRad
 	near := 0.1
 	far := 100.0
-	top := math.Tan(fov*math.Pi/360.0) * near
-	bottom := -top
-	left := aspect * bottom
-	right := aspect * top
-	gl.Frustum(left, right, bottom, top, near, far)
 
-	// Make sure we're changing the model view and not the projection
-	gl.MatrixMode(gl.MODELVIEW)
+	w, h := float64(width), float64(height)
+	r_xy_factor := math.Min(w, h) * 1.0 / fov
+	r_x := r_xy_factor / w
+	r_y := r_xy_factor / h
+	r_zw_factor := 1.0 / (far - near)
+	r_z := (near + far) * r_zw_factor
+	r_w := -2.0 * near * far * r_zw_factor
 
-	// Reset the view
-	gl.LoadIdentity()
+	projectionMatrix[0] = float32(r_x)
+	projectionMatrix[1] = 0.0
+	projectionMatrix[2] = 0.0
+	projectionMatrix[3] = 0.0
+	projectionMatrix[4] = 0.0
+	projectionMatrix[5] = float32(r_y)
+	projectionMatrix[6] = 0.0
+	projectionMatrix[7] = 0.0
+	projectionMatrix[8] = 0.0
+	projectionMatrix[9] = 0.0
+	projectionMatrix[10] = float32(r_z)
+	projectionMatrix[11] = 1.0
+	projectionMatrix[12] = 0.0
+	projectionMatrix[13] = 0.0
+	projectionMatrix[14] = float32(r_w)
+	projectionMatrix[15] = 0.0
+}
+
+func UpdateModelViewMatrix() {
+	baseEyePosition := [3]float32{0.5, 0.25, 1.25}
+	modelViewMatrix[0] = 1.0
+	modelViewMatrix[1] = 0.0
+	modelViewMatrix[2] = 0.0
+	modelViewMatrix[3] = 0.0
+	modelViewMatrix[4] = 0.0
+	modelViewMatrix[5] = 1.0
+	modelViewMatrix[6] = 0.0
+	modelViewMatrix[7] = 0.0
+	modelViewMatrix[8] = 0.0
+	modelViewMatrix[9] = 0.0
+	modelViewMatrix[10] = 1.0
+	modelViewMatrix[11] = 0.0
+	modelViewMatrix[12] = -baseEyePosition[0] // - eye_offset[0];
+	modelViewMatrix[13] = -baseEyePosition[1] // - eye_offset[1];
+	modelViewMatrix[14] = -baseEyePosition[2]
+	modelViewMatrix[15] = 1.0
 }

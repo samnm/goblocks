@@ -36,7 +36,7 @@ func main() {
 
 	fps := fps.NewFPS(glfw.Time())
 
-	blocks.Init()
+	blocks.Init(appWidth, appHeight)
 	for glfw.WindowParam(glfw.Opened) == 1 {
 		blocks.Tick()
 		fps.Tick(glfw.Time())

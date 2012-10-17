@@ -1,6 +1,8 @@
-#version 110
+#version 120
 
 uniform float timer;
+uniform mat4 mv_matrix;
+uniform mat4 p_matrix;
 
 attribute vec4 position;
 

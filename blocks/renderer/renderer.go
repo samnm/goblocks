@@ -38,8 +38,6 @@ var (
 func Init(width, height int) {
 	projectionMatrix = make([]float32, 16)
 	modelViewMatrix = make([]float32, 16)
-	UpdateProjectionMatrix(width, height)
-	UpdateModelViewMatrix()
 
 	InitGL()
 
@@ -77,6 +75,7 @@ func InitGL() {
 
 	width, height := glfw.WindowSize()
 	SetViewport(width, height)
+	UpdateModelViewMatrix()
 
 	glfw.SetWindowSizeCallback(SetViewport)
 }
@@ -167,8 +166,8 @@ const DegToRad = math.Pi / 180
 
 func UpdateProjectionMatrix(width, height int) {
 	fov := 60.0 * DegToRad
-	near := 0.1
-	far := 100.0
+	near := 0.0625
+	far := 256.0
 
 	w, h := float64(width), float64(height)
 	r_xy_factor := math.Min(w, h) * 1.0 / fov
@@ -182,14 +181,17 @@ func UpdateProjectionMatrix(width, height int) {
 	projectionMatrix[1] = 0.0
 	projectionMatrix[2] = 0.0
 	projectionMatrix[3] = 0.0
+
 	projectionMatrix[4] = 0.0
 	projectionMatrix[5] = float32(r_y)
 	projectionMatrix[6] = 0.0
 	projectionMatrix[7] = 0.0
+
 	projectionMatrix[8] = 0.0
 	projectionMatrix[9] = 0.0
 	projectionMatrix[10] = float32(r_z)
 	projectionMatrix[11] = 1.0
+
 	projectionMatrix[12] = 0.0
 	projectionMatrix[13] = 0.0
 	projectionMatrix[14] = float32(r_w)
@@ -197,19 +199,22 @@ func UpdateProjectionMatrix(width, height int) {
 }
 
 func UpdateModelViewMatrix() {
-	baseEyePosition := [3]float32{0.5, 0.25, 1.25}
+	baseEyePosition := [3]float32{0.0, 0.0, -5.0}
 	modelViewMatrix[0] = 1.0
 	modelViewMatrix[1] = 0.0
 	modelViewMatrix[2] = 0.0
 	modelViewMatrix[3] = 0.0
+
 	modelViewMatrix[4] = 0.0
 	modelViewMatrix[5] = 1.0
 	modelViewMatrix[6] = 0.0
 	modelViewMatrix[7] = 0.0
+
 	modelViewMatrix[8] = 0.0
 	modelViewMatrix[9] = 0.0
 	modelViewMatrix[10] = 1.0
 	modelViewMatrix[11] = 0.0
+
 	modelViewMatrix[12] = -baseEyePosition[0] // - eye_offset[0];
 	modelViewMatrix[13] = -baseEyePosition[1] // - eye_offset[1];
 	modelViewMatrix[14] = -baseEyePosition[2]

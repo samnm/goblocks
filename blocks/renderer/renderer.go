@@ -16,6 +16,9 @@ var (
 	fragShader    gl.Shader
 	vertexBuffer  gl.Buffer
 	elementBuffer gl.Buffer
+
+	numIndicies int
+	culling     bool
 )
 
 var (
@@ -41,6 +44,8 @@ func Init(width, height int) {
 	modelViewMatrix = make([]float32, 16)
 	eyePosition = [3]float32{0.0, 0.0, -5.0}
 
+	culling = true
+
 	InitGL()
 
 	var err error
@@ -56,6 +61,23 @@ func Init(width, height int) {
 	InitProgram()
 	InitBuffers()
 	InitProperties()
+
+	glfw.SetKeyCallback(OnKeyPress)
+}
+
+func OnKeyPress(key, state int) {
+	if state == glfw.KeyRelease {
+		return
+	}
+
+	if key == 'C' {
+		culling = !culling
+		if culling {
+			gl.Enable(gl.CULL_FACE)
+		} else {
+			gl.Disable(gl.CULL_FACE)
+		}
+	}
 }
 
 func InitGL() {
@@ -68,7 +90,7 @@ func InitGL() {
 	gl.ClearDepth(1.0)
 
 	gl.Enable(gl.TEXTURE_2D)
-	// gl.Enable(gl.CULL_FACE)
+	gl.Enable(gl.CULL_FACE)
 
 	gl.Enable(gl.DEPTH_TEST)
 	gl.DepthFunc(gl.LEQUAL)
@@ -94,12 +116,30 @@ func InitProgram() {
 
 func InitBuffers() {
 	vertexPositions := []float32{
-		-1.0, -1.0, 0.0, 1.0,
-		1.0, -1.0, 0.0, 1.0,
-		-1.0, 1.0, 0.0, 1.0,
-		1.0, 1.0, 0.0, 1.0,
+		0.5, 0.5, 0.5, 1.0, //0
+		-0.5, 0.5, 0.5, 1.0, //1
+		0.5, -0.5, 0.5, 1.0, //2
+		-0.5, -0.5, 0.5, 1.0,
+		0.5, 0.5, -0.5, 1.0,
+		-0.5, 0.5, -0.5, 1.0,
+		0.5, -0.5, -0.5, 1.0,
+		-0.5, -0.5, -0.5, 1.0,
 	}
-	indicies := []gl.GLushort{0, 1, 2, 3}
+	indicies := []gl.GLushort{
+		4, 5, 6, // front (-Z)
+		6, 5, 7,
+		1, 0, 2, // back (+Z)
+		2, 3, 1,
+		0, 4, 2, // right (+X)
+		2, 4, 6,
+		7, 5, 1, // left (-X)
+		1, 3, 7,
+		0, 1, 5, // top (+Y)
+		5, 4, 0,
+		3, 2, 6, // bottom (-Y)
+		6, 7, 3,
+	}
+	numIndicies = len(indicies)
 
 	var size int
 	size = len(vertexPositions) * int(unsafe.Sizeof(vertexPositions[0]))
@@ -122,6 +162,20 @@ func InitProperties() {
 const sizeOfGLFloat int = int(unsafe.Sizeof(float32(0.0)))
 
 func Tick() {
+	if glfw.Key(glfw.KeyLeft) == glfw.KeyPress {
+		eyePosition[0] -= 0.1
+	}
+	if glfw.Key(glfw.KeyRight) == glfw.KeyPress {
+		eyePosition[0] += 0.1
+	}
+	if glfw.Key(glfw.KeyUp) == glfw.KeyPress {
+		eyePosition[2] += 0.1
+	}
+	if glfw.Key(glfw.KeyDown) == glfw.KeyPress {
+		eyePosition[2] -= 0.1
+	}
+	UpdateModelViewMatrix()
+
 	timer = float32(glfw.Time())
 
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -145,7 +199,7 @@ func Tick() {
 	positionAttrib.EnableArray()
 
 	elementBuffer.Bind(gl.ELEMENT_ARRAY_BUFFER)
-	gl.DrawElements(gl.TRIANGLE_STRIP, 4, gl.UNSIGNED_SHORT, nil)
+	gl.DrawElements(gl.TRIANGLES, numIndicies, gl.UNSIGNED_SHORT, nil)
 
 	positionAttrib.DisableArray()
 	gl.ProgramUnuse()
@@ -158,9 +212,7 @@ func OnResizeWindow(width, height int) {
 }
 
 func SetViewport(width, height int) {
-	// Setup our viewport
 	gl.Viewport(0, 0, width, height)
-
 	UpdateProjectionMatrix(width, height)
 }
 

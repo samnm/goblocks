@@ -5,10 +5,8 @@ import (
 	"github.com/go-gl/gl"
 	"github.com/go-gl/glfw"
 	"os"
-	// "runtime"
 	"sam.vg/goblocks/blocks"
 	"sam.vg/util/fps"
-	// "time"
 )
 
 const (

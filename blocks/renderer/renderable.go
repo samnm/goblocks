@@ -10,13 +10,13 @@ type Vertex struct {
 	texcoord [2]float32
 }
 
-type RenderObject struct {
+type Renderable struct {
 	vertexBuffer  gl.Buffer
 	elementBuffer gl.Buffer
 	numIndicies   int
 }
 
-func NewRenderObject() *RenderObject {
+func NewRenderable() *Renderable {
 	vertexPositions := []float32{
 		0.5, 0.5, 0.5,
 		-0.5, 0.5, 0.5,
@@ -42,7 +42,7 @@ func NewRenderObject() *RenderObject {
 		6, 7, 3,
 	}
 
-	ro := new(RenderObject)
+	ro := new(Renderable)
 
 	var size int
 	size = len(vertexPositions) * int(unsafe.Sizeof(vertexPositions[0]))
@@ -54,15 +54,4 @@ func NewRenderObject() *RenderObject {
 	ro.numIndicies = len(indicies)
 
 	return ro
-}
-
-func (ro *RenderObject) Render() {
-	const sizeOfGLFloat int = int(unsafe.Sizeof(float32(0.0)))
-
-	ro.vertexBuffer.Bind(gl.ARRAY_BUFFER)
-	positionAttrib.AttribPointer(3, gl.FLOAT, false, sizeOfGLFloat*3, nil)
-	positionAttrib.EnableArray()
-
-	ro.elementBuffer.Bind(gl.ELEMENT_ARRAY_BUFFER)
-	gl.DrawElements(gl.TRIANGLES, ro.numIndicies, gl.UNSIGNED_SHORT, nil)
 }

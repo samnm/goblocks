@@ -6,6 +6,7 @@ import (
 	"github.com/go-gl/glfw"
 	"math"
 	"os"
+	"unsafe"
 )
 
 var (
@@ -14,8 +15,8 @@ var (
 	vertexShader gl.Shader
 	fragShader   gl.Shader
 
-	cube    *RenderObject
-	culling bool
+	renderables []*Renderable
+	culling     bool
 )
 
 var (
@@ -56,8 +57,9 @@ func Init(width, height int) {
 	}
 
 	InitProgram()
-	InitCube()
 	InitProperties()
+
+	renderables = []*Renderable{NewRenderable()}
 
 	glfw.SetKeyCallback(OnKeyPress)
 }
@@ -111,10 +113,6 @@ func InitProgram() {
 	program.Link()
 }
 
-func InitCube() {
-	cube = NewRenderObject()
-}
-
 func InitProperties() {
 	timerUniform = program.GetUniformLocation("timer")
 	textureUniforms[0] = program.GetUniformLocation("textures[0]")
@@ -124,6 +122,8 @@ func InitProperties() {
 
 	positionAttrib = program.GetAttribLocation("position")
 }
+
+const sizeOfGLFloat int = int(unsafe.Sizeof(float32(0.0)))
 
 func Tick() {
 	if glfw.Key(glfw.KeyLeft) == glfw.KeyPress {
@@ -158,7 +158,14 @@ func Tick() {
 	textures[1].Bind(gl.TEXTURE_2D)
 	textureUniforms[1].Uniform1i(1)
 
-	cube.Render()
+	for _, renderable := range renderables {
+		renderable.vertexBuffer.Bind(gl.ARRAY_BUFFER)
+		positionAttrib.AttribPointer(3, gl.FLOAT, false, sizeOfGLFloat*3, nil)
+		positionAttrib.EnableArray()
+
+		renderable.elementBuffer.Bind(gl.ELEMENT_ARRAY_BUFFER)
+		gl.DrawElements(gl.TRIANGLES, renderable.numIndicies, gl.UNSIGNED_SHORT, nil)
+	}
 
 	positionAttrib.DisableArray()
 	gl.ProgramUnuse()

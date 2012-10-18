@@ -6,19 +6,16 @@ import (
 	"github.com/go-gl/glfw"
 	"math"
 	"os"
-	"unsafe"
 )
 
 var (
-	textures      [2]gl.Texture
-	program       gl.Program
-	vertexShader  gl.Shader
-	fragShader    gl.Shader
-	vertexBuffer  gl.Buffer
-	elementBuffer gl.Buffer
+	textures     [2]gl.Texture
+	program      gl.Program
+	vertexShader gl.Shader
+	fragShader   gl.Shader
 
-	numIndicies int
-	culling     bool
+	cube    *RenderObject
+	culling bool
 )
 
 var (
@@ -59,7 +56,7 @@ func Init(width, height int) {
 	}
 
 	InitProgram()
-	InitBuffers()
+	InitCube()
 	InitProperties()
 
 	glfw.SetKeyCallback(OnKeyPress)
@@ -114,39 +111,8 @@ func InitProgram() {
 	program.Link()
 }
 
-func InitBuffers() {
-	vertexPositions := []float32{
-		0.5, 0.5, 0.5, 1.0, //0
-		-0.5, 0.5, 0.5, 1.0, //1
-		0.5, -0.5, 0.5, 1.0, //2
-		-0.5, -0.5, 0.5, 1.0,
-		0.5, 0.5, -0.5, 1.0,
-		-0.5, 0.5, -0.5, 1.0,
-		0.5, -0.5, -0.5, 1.0,
-		-0.5, -0.5, -0.5, 1.0,
-	}
-	indicies := []gl.GLushort{
-		4, 5, 6, // front (-Z)
-		6, 5, 7,
-		1, 0, 2, // back (+Z)
-		2, 3, 1,
-		0, 4, 2, // right (+X)
-		2, 4, 6,
-		7, 5, 1, // left (-X)
-		1, 3, 7,
-		0, 1, 5, // top (+Y)
-		5, 4, 0,
-		3, 2, 6, // bottom (-Y)
-		6, 7, 3,
-	}
-	numIndicies = len(indicies)
-
-	var size int
-	size = len(vertexPositions) * int(unsafe.Sizeof(vertexPositions[0]))
-	vertexBuffer = MakeBuffer(gl.ARRAY_BUFFER, size, vertexPositions)
-
-	size = len(indicies) * int(unsafe.Sizeof(indicies[0]))
-	elementBuffer = MakeBuffer(gl.ELEMENT_ARRAY_BUFFER, size, indicies)
+func InitCube() {
+	cube = NewRenderObject()
 }
 
 func InitProperties() {
@@ -158,8 +124,6 @@ func InitProperties() {
 
 	positionAttrib = program.GetAttribLocation("position")
 }
-
-const sizeOfGLFloat int = int(unsafe.Sizeof(float32(0.0)))
 
 func Tick() {
 	if glfw.Key(glfw.KeyLeft) == glfw.KeyPress {
@@ -194,12 +158,7 @@ func Tick() {
 	textures[1].Bind(gl.TEXTURE_2D)
 	textureUniforms[1].Uniform1i(1)
 
-	vertexBuffer.Bind(gl.ARRAY_BUFFER)
-	positionAttrib.AttribPointer(4, gl.FLOAT, false, sizeOfGLFloat*4, nil)
-	positionAttrib.EnableArray()
-
-	elementBuffer.Bind(gl.ELEMENT_ARRAY_BUFFER)
-	gl.DrawElements(gl.TRIANGLES, numIndicies, gl.UNSIGNED_SHORT, nil)
+	cube.Render()
 
 	positionAttrib.DisableArray()
 	gl.ProgramUnuse()

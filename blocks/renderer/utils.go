@@ -35,7 +35,7 @@ func MakeShader(shaderType gl.GLenum, filename string) gl.Shader {
 	shader := gl.CreateShader(shaderType)
 	shader.Source(source)
 	shader.Compile()
-	fmt.Println(shader.GetInfoLog())
+	// fmt.Println(shader.GetInfoLog())
 
 	return shader
 }

@@ -1,13 +1,16 @@
 package renderer
 
 import (
-	"fmt"
 	"github.com/go-gl/gl"
 	"github.com/go-gl/glfw"
-	"math"
-	"os"
 	"unsafe"
 )
+
+type RenderObject struct {
+	vertexBuffer  gl.Buffer
+	elementBuffer gl.Buffer
+	numIndicies   int
+}
 
 var (
 	textures     [2]gl.Texture
@@ -15,8 +18,11 @@ var (
 	vertexShader gl.Shader
 	fragShader   gl.Shader
 
-	renderables []*Renderable
-	culling     bool
+	renderObjects []*RenderObject
+	culling       bool = true
+
+	camera *Camera
+	timer  float32
 )
 
 var (
@@ -24,82 +30,40 @@ var (
 	textureUniforms         [2]gl.UniformLocation
 	modelViewMatrixUniform  gl.UniformLocation
 	projectionMatrixUniform gl.UniformLocation
-)
 
-var (
 	positionAttrib gl.AttribLocation
 )
 
-var (
-	modelViewMatrix  []float32
-	projectionMatrix []float32
-	eyePosition      [3]float32
-	timer            float32
-)
-
 func Init(width, height int) {
-	projectionMatrix = make([]float32, 16)
-	modelViewMatrix = make([]float32, 16)
-	eyePosition = [3]float32{0.0, 0.0, -5.0}
+	camera = NewCamera(width, height)
 
-	culling = true
+	InitGL(width, height)
 
-	InitGL()
-
-	var err error
-	textures[0], err = LoadTexture("resources/hello1.png")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[e] %v\n", err)
-	}
-	textures[1], err = LoadTexture("resources/hello2.png")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[e] %v\n", err)
-	}
+	textures[0] = LoadTexture("resources/hello1.png")
+	textures[1] = LoadTexture("resources/hello2.png")
 
 	InitProgram()
 	InitProperties()
 
-	renderables = []*Renderable{NewRenderable()}
-
-	glfw.SetKeyCallback(OnKeyPress)
+	renderObjects = []*RenderObject{NewUnitCubeRenderObject()}
 }
 
-func OnKeyPress(key, state int) {
-	if state == glfw.KeyRelease {
-		return
-	}
-
-	if key == 'C' {
-		culling = !culling
-		if culling {
-			gl.Enable(gl.CULL_FACE)
-		} else {
-			gl.Disable(gl.CULL_FACE)
-		}
-	}
-}
-
-func InitGL() {
+func InitGL(width, height int) {
 	//enable vertical sync if the card supports it
 	glfw.SetSwapInterval(1)
 
 	gl.ShadeModel(gl.SMOOTH)
 
 	gl.ClearColor(0.1, 0.1, 0.1, 1.0)
-	gl.ClearDepth(1.0)
 
 	gl.Enable(gl.TEXTURE_2D)
 	gl.Enable(gl.CULL_FACE)
-
 	gl.Enable(gl.DEPTH_TEST)
 	gl.DepthFunc(gl.LEQUAL)
 
 	gl.Hint(gl.PERSPECTIVE_CORRECTION_HINT, gl.NICEST)
 
-	width, height := glfw.WindowSize()
 	SetViewport(width, height)
-	UpdateModelViewMatrix()
-
 	glfw.SetWindowSizeCallback(SetViewport)
 }
 
@@ -126,28 +90,14 @@ func InitProperties() {
 const sizeOfGLFloat int = int(unsafe.Sizeof(float32(0.0)))
 
 func Tick() {
-	if glfw.Key(glfw.KeyLeft) == glfw.KeyPress {
-		eyePosition[0] -= 0.1
-	}
-	if glfw.Key(glfw.KeyRight) == glfw.KeyPress {
-		eyePosition[0] += 0.1
-	}
-	if glfw.Key(glfw.KeyUp) == glfw.KeyPress {
-		eyePosition[2] += 0.1
-	}
-	if glfw.Key(glfw.KeyDown) == glfw.KeyPress {
-		eyePosition[2] -= 0.1
-	}
-	UpdateModelViewMatrix()
-
 	timer = float32(glfw.Time())
 
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 	program.Use()
 
-	modelViewMatrixUniform.UniformMatrix4fv(modelViewMatrix)
-	projectionMatrixUniform.UniformMatrix4fv(projectionMatrix)
+	modelViewMatrixUniform.UniformMatrix4fv(camera.modelViewMatrix)
+	projectionMatrixUniform.UniformMatrix4fv(camera.projectionMatrix)
 	timerUniform.Uniform1f(timer)
 
 	gl.ActiveTexture(gl.TEXTURE0)
@@ -158,13 +108,13 @@ func Tick() {
 	textures[1].Bind(gl.TEXTURE_2D)
 	textureUniforms[1].Uniform1i(1)
 
-	for _, renderable := range renderables {
-		renderable.vertexBuffer.Bind(gl.ARRAY_BUFFER)
+	for _, renderObject := range renderObjects {
+		renderObject.vertexBuffer.Bind(gl.ARRAY_BUFFER)
 		positionAttrib.AttribPointer(3, gl.FLOAT, false, sizeOfGLFloat*3, nil)
 		positionAttrib.EnableArray()
 
-		renderable.elementBuffer.Bind(gl.ELEMENT_ARRAY_BUFFER)
-		gl.DrawElements(gl.TRIANGLES, renderable.numIndicies, gl.UNSIGNED_SHORT, nil)
+		renderObject.elementBuffer.Bind(gl.ELEMENT_ARRAY_BUFFER)
+		gl.DrawElements(gl.TRIANGLES, renderObject.numIndicies, gl.UNSIGNED_SHORT, nil)
 	}
 
 	positionAttrib.DisableArray()
@@ -179,63 +129,5 @@ func OnResizeWindow(width, height int) {
 
 func SetViewport(width, height int) {
 	gl.Viewport(0, 0, width, height)
-	UpdateProjectionMatrix(width, height)
-}
-
-const DegToRad = math.Pi / 180
-
-func UpdateProjectionMatrix(width, height int) {
-	fov := 60.0 * DegToRad
-	near := 0.0625
-	far := 256.0
-
-	w, h := float64(width), float64(height)
-	r_xy_factor := math.Min(w, h) * 1.0 / fov
-	r_x := r_xy_factor / w
-	r_y := r_xy_factor / h
-	r_zw_factor := 1.0 / (far - near)
-	r_z := (near + far) * r_zw_factor
-	r_w := -2.0 * near * far * r_zw_factor
-
-	projectionMatrix[0] = float32(r_x)
-	projectionMatrix[1] = 0.0
-	projectionMatrix[2] = 0.0
-	projectionMatrix[3] = 0.0
-
-	projectionMatrix[4] = 0.0
-	projectionMatrix[5] = float32(r_y)
-	projectionMatrix[6] = 0.0
-	projectionMatrix[7] = 0.0
-
-	projectionMatrix[8] = 0.0
-	projectionMatrix[9] = 0.0
-	projectionMatrix[10] = float32(r_z)
-	projectionMatrix[11] = 1.0
-
-	projectionMatrix[12] = 0.0
-	projectionMatrix[13] = 0.0
-	projectionMatrix[14] = float32(r_w)
-	projectionMatrix[15] = 0.0
-}
-
-func UpdateModelViewMatrix() {
-	modelViewMatrix[0] = 1.0
-	modelViewMatrix[1] = 0.0
-	modelViewMatrix[2] = 0.0
-	modelViewMatrix[3] = 0.0
-
-	modelViewMatrix[4] = 0.0
-	modelViewMatrix[5] = 1.0
-	modelViewMatrix[6] = 0.0
-	modelViewMatrix[7] = 0.0
-
-	modelViewMatrix[8] = 0.0
-	modelViewMatrix[9] = 0.0
-	modelViewMatrix[10] = 1.0
-	modelViewMatrix[11] = 0.0
-
-	modelViewMatrix[12] = -eyePosition[0]
-	modelViewMatrix[13] = -eyePosition[1]
-	modelViewMatrix[14] = -eyePosition[2]
-	modelViewMatrix[15] = 1.0
+	camera.UpdateProjectionMatrix(width, height)
 }

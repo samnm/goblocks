@@ -8,6 +8,7 @@ import (
 	_ "image/png"
 	"log"
 	"os"
+	"unsafe"
 )
 
 func MakeBuffer(target gl.GLenum, size int, data interface{}) gl.Buffer {
@@ -40,16 +41,18 @@ func MakeShader(shaderType gl.GLenum, filename string) gl.Shader {
 	return shader
 }
 
-func LoadTexture(filename string) (gl.Texture, error) {
+func LoadTexture(filename string) gl.Texture {
 	r, err := os.Open(filename)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[e] %v\n", err)
+		return 0
 	}
 	defer r.Close()
 
 	img, _, err := image.Decode(r)
 	if err != nil {
-		return 0, err
+		fmt.Fprintf(os.Stderr, "[e] %v\n", err)
+		return 0
 	}
 
 	// lazy way to ensure we have the correct image format for opengl
@@ -74,5 +77,45 @@ func LoadTexture(filename string) (gl.Texture, error) {
 	}
 	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, data)
 
-	return tex, nil
+	return tex
+}
+
+func NewUnitCubeRenderObject() *RenderObject {
+	vertexPositions := []float32{
+		0.5, 0.5, 0.5,
+		-0.5, 0.5, 0.5,
+		0.5, -0.5, 0.5,
+		-0.5, -0.5, 0.5,
+		0.5, 0.5, -0.5,
+		-0.5, 0.5, -0.5,
+		0.5, -0.5, -0.5,
+		-0.5, -0.5, -0.5,
+	}
+	indicies := []gl.GLushort{
+		4, 5, 6, // front (-Z)
+		6, 5, 7,
+		1, 0, 2, // back (+Z)
+		2, 3, 1,
+		0, 4, 2, // right (+X)
+		2, 4, 6,
+		7, 5, 1, // left (-X)
+		1, 3, 7,
+		0, 1, 5, // top (+Y)
+		5, 4, 0,
+		3, 2, 6, // bottom (-Y)
+		6, 7, 3,
+	}
+
+	ro := new(RenderObject)
+
+	var size int
+	size = len(vertexPositions) * int(unsafe.Sizeof(vertexPositions[0]))
+	ro.vertexBuffer = MakeBuffer(gl.ARRAY_BUFFER, size, vertexPositions)
+
+	size = len(indicies) * int(unsafe.Sizeof(indicies[0]))
+	ro.elementBuffer = MakeBuffer(gl.ELEMENT_ARRAY_BUFFER, size, indicies)
+
+	ro.numIndicies = len(indicies)
+
+	return ro
 }

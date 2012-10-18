@@ -5,14 +5,16 @@ import (
 	"github.com/go-gl/gl"
 	"github.com/go-gl/glfw"
 	"os"
+	// "runtime"
 	"sam.vg/goblocks/blocks"
 	"sam.vg/util/fps"
+	// "time"
 )
 
 const (
 	title     = "Goblocks!"
-	appWidth  = 400
-	appHeight = 300
+	appWidth  = 1024
+	appHeight = 768
 )
 
 func main() {
@@ -40,5 +42,10 @@ func main() {
 	for glfw.WindowParam(glfw.Opened) == 1 {
 		blocks.Tick()
 		fps.Tick(glfw.Time())
+		if glfw.WindowParam(glfw.Active) == 1 {
+			glfw.Sleep(0.001)
+		} else {
+			glfw.Sleep(0.05)
+		}
 	}
 }

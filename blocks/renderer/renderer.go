@@ -6,10 +6,14 @@ import (
 	"unsafe"
 )
 
+type Vertex struct {
+	position [3]float32
+	texcoord [2]float32
+}
+
 type RenderObject struct {
-	vertexBuffer  gl.Buffer
-	elementBuffer gl.Buffer
-	numIndicies   int
+	vertexBuffer gl.Buffer
+	numVerticies int
 }
 
 var (
@@ -32,6 +36,7 @@ var (
 	projectionMatrixUniform gl.UniformLocation
 
 	positionAttrib gl.AttribLocation
+	texcoordAttrib gl.AttribLocation
 )
 
 func Init(width, height int) {
@@ -57,7 +62,7 @@ func InitGL(width, height int) {
 	gl.ClearColor(0.1, 0.1, 0.1, 1.0)
 
 	gl.Enable(gl.TEXTURE_2D)
-	gl.Enable(gl.CULL_FACE)
+	// gl.Enable(gl.CULL_FACE)
 	gl.Enable(gl.DEPTH_TEST)
 	gl.DepthFunc(gl.LEQUAL)
 
@@ -85,6 +90,7 @@ func InitProperties() {
 	projectionMatrixUniform = program.GetUniformLocation("p_matrix")
 
 	positionAttrib = program.GetAttribLocation("position")
+	texcoordAttrib = program.GetAttribLocation("texcoord")
 }
 
 const sizeOfGLFloat int = int(unsafe.Sizeof(float32(0.0)))
@@ -100,6 +106,9 @@ func Tick() {
 	projectionMatrixUniform.UniformMatrix4fv(camera.projectionMatrix)
 	timerUniform.Uniform1f(timer)
 
+	positionAttrib.EnableArray()
+	texcoordAttrib.EnableArray()
+
 	gl.ActiveTexture(gl.TEXTURE0)
 	textures[0].Bind(gl.TEXTURE_2D)
 	textureUniforms[0].Uniform1i(0)
@@ -108,16 +117,19 @@ func Tick() {
 	textures[1].Bind(gl.TEXTURE_2D)
 	textureUniforms[1].Uniform1i(1)
 
+	sizeOfVertex := int(unsafe.Sizeof(Vertex{}))
+	posoffset := uintptr(0)
+	texoffset := unsafe.Offsetof(Vertex{}.texcoord)
 	for _, renderObject := range renderObjects {
 		renderObject.vertexBuffer.Bind(gl.ARRAY_BUFFER)
-		positionAttrib.AttribPointer(3, gl.FLOAT, false, sizeOfGLFloat*3, nil)
-		positionAttrib.EnableArray()
+		positionAttrib.AttribPointer(3, gl.FLOAT, false, sizeOfVertex, posoffset)
+		texcoordAttrib.AttribPointer(2, gl.FLOAT, false, sizeOfVertex, texoffset)
 
-		renderObject.elementBuffer.Bind(gl.ELEMENT_ARRAY_BUFFER)
-		gl.DrawElements(gl.TRIANGLES, renderObject.numIndicies, gl.UNSIGNED_SHORT, nil)
+		gl.DrawArrays(gl.TRIANGLES, 0, renderObject.numVerticies)
 	}
 
 	positionAttrib.DisableArray()
+	texcoordAttrib.DisableArray()
 	gl.ProgramUnuse()
 
 	glfw.SwapBuffers()

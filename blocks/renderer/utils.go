@@ -36,7 +36,7 @@ func MakeShader(shaderType gl.GLenum, filename string) gl.Shader {
 	shader := gl.CreateShader(shaderType)
 	shader.Source(source)
 	shader.Compile()
-	// fmt.Println(shader.GetInfoLog())
+	fmt.Println(shader.GetInfoLog())
 
 	return shader
 }
@@ -81,41 +81,44 @@ func LoadTexture(filename string) gl.Texture {
 }
 
 func NewUnitCubeRenderObject() *RenderObject {
-	vertexPositions := []float32{
-		0.5, 0.5, 0.5,
-		-0.5, 0.5, 0.5,
-		0.5, -0.5, 0.5,
-		-0.5, -0.5, 0.5,
-		0.5, 0.5, -0.5,
-		-0.5, 0.5, -0.5,
-		0.5, -0.5, -0.5,
-		-0.5, -0.5, -0.5,
+	verticies := []Vertex{
+		Vertex{[3]float32{-0.5, 0.5, 0.5}, [2]float32{0.0, 1.0}},
+		Vertex{[3]float32{-0.5, -0.5, 0.5}, [2]float32{0.0, 0.0}},
+		Vertex{[3]float32{0.5, -0.5, 0.5}, [2]float32{1.0, 0.0}},
+		Vertex{[3]float32{-0.5, 0.5, 0.5}, [2]float32{0.0, 1.0}},
+		Vertex{[3]float32{0.5, 0.5, 0.5}, [2]float32{1.0, 1.0}},
+		Vertex{[3]float32{0.5, -0.5, 0.5}, [2]float32{1.0, 0.0}},
 	}
-	indicies := []gl.GLushort{
-		4, 5, 6, // front (-Z)
-		6, 5, 7,
-		1, 0, 2, // back (+Z)
-		2, 3, 1,
-		0, 4, 2, // right (+X)
-		2, 4, 6,
-		7, 5, 1, // left (-X)
-		1, 3, 7,
-		0, 1, 5, // top (+Y)
-		5, 4, 0,
-		3, 2, 6, // bottom (-Y)
-		6, 7, 3,
-	}
+
+	// Vertex{[3]float32{0.5, 0.5, 0.5}, [2]float32{0, 1}}, //0
+	// Vertex{[3]float32{-0.5, 0.5, 0.5}, [2]float32{0, 1}},//1
+	// Vertex{[3]float32{0.5, -0.5, 0.5}, [2]float32{0, 1}},//2
+	// Vertex{[3]float32{-0.5, -0.5, 0.5}, [2]float32{0, 1}},//3
+	// Vertex{[3]float32{0.5, 0.5, -0.5}, [2]float32{0, 1}},//4
+	// Vertex{[3]float32{-0.5, 0.5, -0.5}, [2]float32{0, 1}},//5
+	// Vertex{[3]float32{0.5, -0.5, -0.5}, [2]float32{0, 1}},//6
+	// Vertex{[3]float32{-0.5, -0.5, -0.5}, [2]float32{0, 1}},//7
+
+	// indicies := []gl.GLushort{
+	// 	4, 5, 6, // front (-Z)
+	// 	6, 5, 7,
+	// 	1, 0, 2, // back (+Z)
+	// 	2, 3, 1,
+	// 	0, 4, 2, // right (+X)
+	// 	2, 4, 6,
+	// 	7, 5, 1, // left (-X)
+	// 	1, 3, 7,
+	// 	0, 1, 5, // top (+Y)
+	// 	5, 4, 0,
+	// 	3, 2, 6, // bottom (-Y)
+	// 	6, 7, 3,
+	// }
 
 	ro := new(RenderObject)
 
-	var size int
-	size = len(vertexPositions) * int(unsafe.Sizeof(vertexPositions[0]))
-	ro.vertexBuffer = MakeBuffer(gl.ARRAY_BUFFER, size, vertexPositions)
-
-	size = len(indicies) * int(unsafe.Sizeof(indicies[0]))
-	ro.elementBuffer = MakeBuffer(gl.ELEMENT_ARRAY_BUFFER, size, indicies)
-
-	ro.numIndicies = len(indicies)
+	size := len(verticies) * int(unsafe.Sizeof(verticies[0]))
+	ro.vertexBuffer = MakeBuffer(gl.ARRAY_BUFFER, size, verticies)
+	ro.numVerticies = len(verticies)
 
 	return ro
 }

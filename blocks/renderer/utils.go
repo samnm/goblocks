@@ -82,37 +82,19 @@ func LoadTexture(filename string) gl.Texture {
 
 func NewUnitCubeRenderObject() *RenderObject {
 	verticies := []Vertex{
-		Vertex{[3]float32{-0.5, 0.5, 0.5}, [2]float32{0.0, 1.0}},
+		Vertex{[3]float32{-0.5, 0.5, 0.5}, [2]float32{0.0, 1.0}}, //+Z Face
 		Vertex{[3]float32{-0.5, -0.5, 0.5}, [2]float32{0.0, 0.0}},
 		Vertex{[3]float32{0.5, -0.5, 0.5}, [2]float32{1.0, 0.0}},
-		Vertex{[3]float32{-0.5, 0.5, 0.5}, [2]float32{0.0, 1.0}},
 		Vertex{[3]float32{0.5, 0.5, 0.5}, [2]float32{1.0, 1.0}},
+		Vertex{[3]float32{-0.5, 0.5, 0.5}, [2]float32{0.0, 1.0}},
 		Vertex{[3]float32{0.5, -0.5, 0.5}, [2]float32{1.0, 0.0}},
+		Vertex{[3]float32{-0.5, 0.5, -0.5}, [2]float32{1.0, 1.0}}, //-Z Face
+		Vertex{[3]float32{0.5, -0.5, -0.5}, [2]float32{0.0, 0.0}},
+		Vertex{[3]float32{-0.5, -0.5, -0.5}, [2]float32{1.0, 0.0}},
+		Vertex{[3]float32{0.5, 0.5, -0.5}, [2]float32{0.0, 1.0}},
+		Vertex{[3]float32{0.5, -0.5, -0.5}, [2]float32{0.0, 0.0}},
+		Vertex{[3]float32{-0.5, 0.5, -0.5}, [2]float32{1.0, 1.0}},
 	}
-
-	// Vertex{[3]float32{0.5, 0.5, 0.5}, [2]float32{0, 1}}, //0
-	// Vertex{[3]float32{-0.5, 0.5, 0.5}, [2]float32{0, 1}},//1
-	// Vertex{[3]float32{0.5, -0.5, 0.5}, [2]float32{0, 1}},//2
-	// Vertex{[3]float32{-0.5, -0.5, 0.5}, [2]float32{0, 1}},//3
-	// Vertex{[3]float32{0.5, 0.5, -0.5}, [2]float32{0, 1}},//4
-	// Vertex{[3]float32{-0.5, 0.5, -0.5}, [2]float32{0, 1}},//5
-	// Vertex{[3]float32{0.5, -0.5, -0.5}, [2]float32{0, 1}},//6
-	// Vertex{[3]float32{-0.5, -0.5, -0.5}, [2]float32{0, 1}},//7
-
-	// indicies := []gl.GLushort{
-	// 	4, 5, 6, // front (-Z)
-	// 	6, 5, 7,
-	// 	1, 0, 2, // back (+Z)
-	// 	2, 3, 1,
-	// 	0, 4, 2, // right (+X)
-	// 	2, 4, 6,
-	// 	7, 5, 1, // left (-X)
-	// 	1, 3, 7,
-	// 	0, 1, 5, // top (+Y)
-	// 	5, 4, 0,
-	// 	3, 2, 6, // bottom (-Y)
-	// 	6, 7, 3,
-	// }
 
 	ro := new(RenderObject)
 

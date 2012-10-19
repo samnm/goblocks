@@ -62,7 +62,7 @@ func InitGL(width, height int) {
 	gl.ClearColor(0.1, 0.1, 0.1, 1.0)
 
 	gl.Enable(gl.TEXTURE_2D)
-	// gl.Enable(gl.CULL_FACE)
+	gl.Enable(gl.CULL_FACE)
 	gl.Enable(gl.DEPTH_TEST)
 	gl.DepthFunc(gl.LEQUAL)
 
@@ -70,6 +70,20 @@ func InitGL(width, height int) {
 
 	SetViewport(width, height)
 	glfw.SetWindowSizeCallback(SetViewport)
+	glfw.SetKeyCallback(OnKey)
+}
+
+func OnKey(key, state int) {
+	if state != glfw.KeyPress {
+		return
+	}
+	if key == 'C' {
+		if culling = !culling; culling {
+			gl.Enable(gl.CULL_FACE)
+		} else {
+			gl.Disable(gl.CULL_FACE)
+		}
+	}
 }
 
 func InitProgram() {

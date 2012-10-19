@@ -82,18 +82,47 @@ func LoadTexture(filename string) gl.Texture {
 
 func NewUnitCubeRenderObject() *RenderObject {
 	verticies := []Vertex{
-		Vertex{[3]float32{-0.5, 0.5, 0.5}, [2]float32{0.0, 1.0}}, //+Z Face
-		Vertex{[3]float32{-0.5, -0.5, 0.5}, [2]float32{0.0, 0.0}},
+		Vertex{[3]float32{-0.5, 0.5, 0.5}, [2]float32{1.0, 1.0}}, //+Z Face (far)
+		Vertex{[3]float32{0.5, -0.5, 0.5}, [2]float32{0.0, 0.0}},
+		Vertex{[3]float32{-0.5, -0.5, 0.5}, [2]float32{1.0, 0.0}},
+		Vertex{[3]float32{0.5, 0.5, 0.5}, [2]float32{0.0, 1.0}},
+		Vertex{[3]float32{0.5, -0.5, 0.5}, [2]float32{0.0, 0.0}},
+		Vertex{[3]float32{-0.5, 0.5, 0.5}, [2]float32{1.0, 1.0}},
+
+		Vertex{[3]float32{-0.5, 0.5, -0.5}, [2]float32{0.0, 1.0}}, //-Z Face (close)
+		Vertex{[3]float32{-0.5, -0.5, -0.5}, [2]float32{0.0, 0.0}},
+		Vertex{[3]float32{0.5, -0.5, -0.5}, [2]float32{1.0, 0.0}},
+		Vertex{[3]float32{0.5, 0.5, -0.5}, [2]float32{1.0, 1.0}},
+		Vertex{[3]float32{-0.5, 0.5, -0.5}, [2]float32{0.0, 1.0}},
+		Vertex{[3]float32{0.5, -0.5, -0.5}, [2]float32{1.0, 0.0}},
+
+		Vertex{[3]float32{0.5, 0.5, -0.5}, [2]float32{0.0, 1.0}}, //+X Face (right)
+		Vertex{[3]float32{0.5, -0.5, -0.5}, [2]float32{0.0, 0.0}},
+		Vertex{[3]float32{0.5, 0.5, 0.5}, [2]float32{1.0, 1.0}},
+		Vertex{[3]float32{0.5, -0.5, -0.5}, [2]float32{0.0, 0.0}},
 		Vertex{[3]float32{0.5, -0.5, 0.5}, [2]float32{1.0, 0.0}},
 		Vertex{[3]float32{0.5, 0.5, 0.5}, [2]float32{1.0, 1.0}},
+
+		Vertex{[3]float32{-0.5, 0.5, -0.5}, [2]float32{1.0, 1.0}}, //-X Face (left)
 		Vertex{[3]float32{-0.5, 0.5, 0.5}, [2]float32{0.0, 1.0}},
-		Vertex{[3]float32{0.5, -0.5, 0.5}, [2]float32{1.0, 0.0}},
-		Vertex{[3]float32{-0.5, 0.5, -0.5}, [2]float32{1.0, 1.0}}, //-Z Face
-		Vertex{[3]float32{0.5, -0.5, -0.5}, [2]float32{0.0, 0.0}},
 		Vertex{[3]float32{-0.5, -0.5, -0.5}, [2]float32{1.0, 0.0}},
-		Vertex{[3]float32{0.5, 0.5, -0.5}, [2]float32{0.0, 1.0}},
-		Vertex{[3]float32{0.5, -0.5, -0.5}, [2]float32{0.0, 0.0}},
-		Vertex{[3]float32{-0.5, 0.5, -0.5}, [2]float32{1.0, 1.0}},
+		Vertex{[3]float32{-0.5, -0.5, -0.5}, [2]float32{1.0, 0.0}},
+		Vertex{[3]float32{-0.5, 0.5, 0.5}, [2]float32{0.0, 1.0}},
+		Vertex{[3]float32{-0.5, -0.5, 0.5}, [2]float32{0.0, 0.0}},
+
+		Vertex{[3]float32{0.5, 0.5, -0.5}, [2]float32{1.0, 1.0}}, //+Y Face (top)
+		Vertex{[3]float32{0.5, 0.5, 0.5}, [2]float32{0.0, 1.0}},
+		Vertex{[3]float32{-0.5, 0.5, -0.5}, [2]float32{1.0, 0.0}},
+		Vertex{[3]float32{-0.5, 0.5, -0.5}, [2]float32{1.0, 0.0}},
+		Vertex{[3]float32{0.5, 0.5, 0.5}, [2]float32{0.0, 1.0}},
+		Vertex{[3]float32{-0.5, 0.5, 0.5}, [2]float32{0.0, 0.0}},
+
+		Vertex{[3]float32{0.5, -0.5, -0.5}, [2]float32{1.0, 1.0}}, //-Y Face (top)
+		Vertex{[3]float32{-0.5, -0.5, -0.5}, [2]float32{1.0, 0.0}},
+		Vertex{[3]float32{0.5, -0.5, 0.5}, [2]float32{0.0, 1.0}},
+		Vertex{[3]float32{-0.5, -0.5, -0.5}, [2]float32{1.0, 0.0}},
+		Vertex{[3]float32{-0.5, -0.5, 0.5}, [2]float32{0.0, 0.0}},
+		Vertex{[3]float32{0.5, -0.5, 0.5}, [2]float32{0.0, 1.0}},
 	}
 
 	ro := new(RenderObject)

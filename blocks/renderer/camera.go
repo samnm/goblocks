@@ -14,7 +14,7 @@ func NewCamera(viewWidth, viewHeight int) *Camera {
 	camera := &Camera{}
 	camera.projectionMatrix = make([]float32, 16)
 	camera.modelViewMatrix = make([]float32, 16)
-	camera.eyePosition = [3]float32{1.0, 0.0, -3.0}
+	camera.eyePosition = [3]float32{1.5, 1.5, -3.0}
 
 	camera.UpdateProjectionMatrix(viewWidth, viewHeight)
 	camera.UpdateModelViewMatrix()

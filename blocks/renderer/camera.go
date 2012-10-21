@@ -5,15 +5,15 @@ import (
 )
 
 type Camera struct {
-	modelViewMatrix  []float32
-	projectionMatrix []float32
+	modelViewMatrix  [16]float32
+	projectionMatrix [16]float32
 	eyePosition      [3]float32
 }
 
 func NewCamera(viewWidth, viewHeight int) *Camera {
 	camera := &Camera{}
-	camera.projectionMatrix = make([]float32, 16)
-	camera.modelViewMatrix = make([]float32, 16)
+	camera.projectionMatrix = [16]float32{}
+	camera.modelViewMatrix = [16]float32{}
 	camera.eyePosition = [3]float32{5.0, 10.0, -5.0}
 
 	camera.UpdateProjectionMatrix(viewWidth, viewHeight)

@@ -116,12 +116,14 @@ func NewChunk() *RenderObject {
 	for ix := 0; ix < chunkSize; ix++ {
 		for iz := 0; iz < chunkSize; iz++ {
 			height := int(((simplexnoise.Noise2(float64(ix)/20, float64(iz)/20) + 1) / 2) * float64(chunkSize))
-			verticies = append(verticies, OffsetFace(0, ix, height, iz)...)
-			verticies = append(verticies, OffsetFace(1, ix, height, iz)...)
-			verticies = append(verticies, OffsetFace(2, ix, height, iz)...)
-			verticies = append(verticies, OffsetFace(3, ix, height, iz)...)
-			verticies = append(verticies, OffsetFace(4, ix, height, iz)...)
-			verticies = append(verticies, OffsetFace(5, ix, height, iz)...)
+			for iy := 0; iy < height; iy++ {
+				verticies = append(verticies, OffsetFace(0, ix, iy, iz)...)
+				verticies = append(verticies, OffsetFace(1, ix, iy, iz)...)
+				verticies = append(verticies, OffsetFace(2, ix, iy, iz)...)
+				verticies = append(verticies, OffsetFace(3, ix, iy, iz)...)
+				verticies = append(verticies, OffsetFace(4, ix, iy, iz)...)
+				verticies = append(verticies, OffsetFace(5, ix, iy, iz)...)
+			}
 		}
 	}
 

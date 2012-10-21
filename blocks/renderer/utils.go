@@ -3,6 +3,7 @@ package renderer
 import (
 	"fmt"
 	"github.com/go-gl/gl"
+	"github.com/larspensjo/Go-simplex-noise/simplexnoise"
 	"image"
 	"image/draw"
 	_ "image/png"
@@ -80,56 +81,77 @@ func LoadTexture(filename string) gl.Texture {
 	return tex
 }
 
-func NewUnitCubeRenderObject() *RenderObject {
-	verticies := []Vertex{
-		Vertex{[3]float32{-0.5, 0.5, 0.5}, [2]float32{1.0, 1.0}}, //+Z Face (far)
-		Vertex{[3]float32{0.5, -0.5, 0.5}, [2]float32{0.0, 0.0}},
-		Vertex{[3]float32{-0.5, -0.5, 0.5}, [2]float32{1.0, 0.0}},
-		Vertex{[3]float32{0.5, 0.5, 0.5}, [2]float32{0.0, 1.0}},
-		Vertex{[3]float32{0.5, -0.5, 0.5}, [2]float32{0.0, 0.0}},
-		Vertex{[3]float32{-0.5, 0.5, 0.5}, [2]float32{1.0, 1.0}},
+var cubeVerticies = [8][3]float32{
+	[3]float32{0.5, 0.5, 0.5},
+	[3]float32{-0.5, 0.5, 0.5},
+	[3]float32{0.5, -0.5, 0.5},
+	[3]float32{-0.5, -0.5, 0.5},
 
-		Vertex{[3]float32{-0.5, 0.5, -0.5}, [2]float32{0.0, 1.0}}, //-Z Face (close)
-		Vertex{[3]float32{-0.5, -0.5, -0.5}, [2]float32{0.0, 0.0}},
-		Vertex{[3]float32{0.5, -0.5, -0.5}, [2]float32{1.0, 0.0}},
-		Vertex{[3]float32{0.5, 0.5, -0.5}, [2]float32{1.0, 1.0}},
-		Vertex{[3]float32{-0.5, 0.5, -0.5}, [2]float32{0.0, 1.0}},
-		Vertex{[3]float32{0.5, -0.5, -0.5}, [2]float32{1.0, 0.0}},
+	[3]float32{0.5, 0.5, -0.5},
+	[3]float32{-0.5, 0.5, -0.5},
+	[3]float32{0.5, -0.5, -0.5},
+	[3]float32{-0.5, -0.5, -0.5},
+}
 
-		Vertex{[3]float32{0.5, 0.5, -0.5}, [2]float32{0.0, 1.0}}, //+X Face (right)
-		Vertex{[3]float32{0.5, -0.5, -0.5}, [2]float32{0.0, 0.0}},
-		Vertex{[3]float32{0.5, 0.5, 0.5}, [2]float32{1.0, 1.0}},
-		Vertex{[3]float32{0.5, -0.5, -0.5}, [2]float32{0.0, 0.0}},
-		Vertex{[3]float32{0.5, -0.5, 0.5}, [2]float32{1.0, 0.0}},
-		Vertex{[3]float32{0.5, 0.5, 0.5}, [2]float32{1.0, 1.0}},
+var texCoords = [4][2]float32{
+	[2]float32{0, 0},
+	[2]float32{1, 0},
+	[2]float32{0, 1},
+	[2]float32{1, 1},
+}
 
-		Vertex{[3]float32{-0.5, 0.5, -0.5}, [2]float32{1.0, 1.0}}, //-X Face (left)
-		Vertex{[3]float32{-0.5, 0.5, 0.5}, [2]float32{0.0, 1.0}},
-		Vertex{[3]float32{-0.5, -0.5, -0.5}, [2]float32{1.0, 0.0}},
-		Vertex{[3]float32{-0.5, -0.5, -0.5}, [2]float32{1.0, 0.0}},
-		Vertex{[3]float32{-0.5, 0.5, 0.5}, [2]float32{0.0, 1.0}},
-		Vertex{[3]float32{-0.5, -0.5, 0.5}, [2]float32{0.0, 0.0}},
+var faces = [6][6]Vertex{
+	BuildFace([6]int{1, 2, 3, 0, 2, 1}, [6]int{3, 0, 1, 2, 0, 3}), //+Z Face (far)
+	BuildFace([6]int{5, 7, 6, 4, 5, 6}, [6]int{2, 0, 1, 3, 2, 1}), //-Z Face (close)
+	BuildFace([6]int{4, 6, 0, 6, 2, 0}, [6]int{2, 0, 3, 0, 1, 3}), //+X Face (right)
+	BuildFace([6]int{5, 1, 7, 7, 1, 3}, [6]int{3, 2, 1, 1, 2, 0}), //-X Face (left)
+	BuildFace([6]int{4, 0, 5, 5, 0, 1}, [6]int{3, 2, 1, 1, 2, 0}), //+Y Face (top)
+	BuildFace([6]int{6, 7, 2, 7, 3, 2}, [6]int{3, 1, 2, 1, 0, 2}), //-Y Face (bottom)
+}
 
-		Vertex{[3]float32{0.5, 0.5, -0.5}, [2]float32{1.0, 1.0}}, //+Y Face (top)
-		Vertex{[3]float32{0.5, 0.5, 0.5}, [2]float32{0.0, 1.0}},
-		Vertex{[3]float32{-0.5, 0.5, -0.5}, [2]float32{1.0, 0.0}},
-		Vertex{[3]float32{-0.5, 0.5, -0.5}, [2]float32{1.0, 0.0}},
-		Vertex{[3]float32{0.5, 0.5, 0.5}, [2]float32{0.0, 1.0}},
-		Vertex{[3]float32{-0.5, 0.5, 0.5}, [2]float32{0.0, 0.0}},
+func NewChunk() *RenderObject {
+	chunkSize := 16
+	verticies := make([]Vertex, 0, chunkSize*chunkSize*chunkSize*6)
 
-		Vertex{[3]float32{0.5, -0.5, -0.5}, [2]float32{1.0, 1.0}}, //-Y Face (top)
-		Vertex{[3]float32{-0.5, -0.5, -0.5}, [2]float32{1.0, 0.0}},
-		Vertex{[3]float32{0.5, -0.5, 0.5}, [2]float32{0.0, 1.0}},
-		Vertex{[3]float32{-0.5, -0.5, -0.5}, [2]float32{1.0, 0.0}},
-		Vertex{[3]float32{-0.5, -0.5, 0.5}, [2]float32{0.0, 0.0}},
-		Vertex{[3]float32{0.5, -0.5, 0.5}, [2]float32{0.0, 1.0}},
+	for ix := 0; ix < chunkSize; ix++ {
+		for iz := 0; iz < chunkSize; iz++ {
+			height := int(((simplexnoise.Noise2(float64(ix)/20, float64(iz)/20) + 1) / 2) * float64(chunkSize))
+			verticies = append(verticies, OffsetFace(0, ix, height, iz)...)
+			verticies = append(verticies, OffsetFace(1, ix, height, iz)...)
+			verticies = append(verticies, OffsetFace(2, ix, height, iz)...)
+			verticies = append(verticies, OffsetFace(3, ix, height, iz)...)
+			verticies = append(verticies, OffsetFace(4, ix, height, iz)...)
+			verticies = append(verticies, OffsetFace(5, ix, height, iz)...)
+		}
 	}
 
 	ro := new(RenderObject)
 
-	size := len(verticies) * int(unsafe.Sizeof(verticies[0]))
-	ro.vertexBuffer = MakeBuffer(gl.ARRAY_BUFFER, size, verticies)
-	ro.numVerticies = len(verticies)
+	numVerticies := len(verticies)
+	size := numVerticies * int(unsafe.Sizeof(verticies[0]))
+	ro.vertexBuffer = MakeBuffer(gl.ARRAY_BUFFER, size, verticies[:numVerticies])
+	ro.numVerticies = numVerticies
 
 	return ro
+}
+
+func MovePoint(p [3]float32, x, y, z int) [3]float32 {
+	return [3]float32{p[0] + float32(x), p[1] + float32(y), p[2] + float32(z)}
+}
+
+func BuildFace(vertIndicies [6]int, texIndicies [6]int) [6]Vertex {
+	verticies := [6]Vertex{}
+	for i := 0; i < 6; i++ {
+		verticies[i] = Vertex{cubeVerticies[vertIndicies[i]], texCoords[texIndicies[i]]}
+	}
+	return verticies
+}
+
+func OffsetFace(face, x, y, z int) []Vertex {
+	faceVerts := faces[face]
+	offsetFace := make([]Vertex, 6)
+	for i, v := range faceVerts {
+		offsetFace[i] = Vertex{MovePoint(v.position, x, y, z), v.texcoord}
+	}
+	return offsetFace
 }

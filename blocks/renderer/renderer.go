@@ -50,7 +50,8 @@ func Init(width, height int) {
 	InitProgram()
 	InitProperties()
 
-	renderObjects = []*RenderObject{NewUnitCubeRenderObject()}
+	// renderObjects = []*RenderObject{NewUnitCubeRenderObject()}
+	renderObjects = []*RenderObject{NewChunk()}
 }
 
 func InitGL(width, height int) {

@@ -109,20 +109,23 @@ var faces = [6][6]Vertex{
 	BuildFace([6]int{6, 7, 2, 7, 3, 2}, [6]int{3, 1, 2, 1, 0, 2}), //-Y Face (bottom)
 }
 
-func NewChunk() *RenderObject {
+func NewChunk(x, z int) *RenderObject {
 	chunkSize := 16
 	verticies := make([]Vertex, 0, chunkSize*chunkSize*chunkSize*6)
 
+	chunkX := x * chunkSize
+	chunkZ := z * chunkSize
+
 	for ix := 0; ix < chunkSize; ix++ {
 		for iz := 0; iz < chunkSize; iz++ {
-			height := int(((simplexnoise.Noise2(float64(ix)/20, float64(iz)/20) + 1) / 2) * float64(chunkSize))
+			height := int(((simplexnoise.Noise2(float64(ix+chunkX)/20, float64(iz+chunkZ)/20) + 1) / 2) * float64(chunkSize))
 			for iy := 0; iy < height; iy++ {
-				verticies = append(verticies, OffsetFace(0, ix, iy, iz)...)
-				verticies = append(verticies, OffsetFace(1, ix, iy, iz)...)
-				verticies = append(verticies, OffsetFace(2, ix, iy, iz)...)
-				verticies = append(verticies, OffsetFace(3, ix, iy, iz)...)
-				verticies = append(verticies, OffsetFace(4, ix, iy, iz)...)
-				verticies = append(verticies, OffsetFace(5, ix, iy, iz)...)
+				verticies = append(verticies, OffsetFace(0, ix+chunkX, iy, iz+chunkZ)...)
+				verticies = append(verticies, OffsetFace(1, ix+chunkX, iy, iz+chunkZ)...)
+				verticies = append(verticies, OffsetFace(2, ix+chunkX, iy, iz+chunkZ)...)
+				verticies = append(verticies, OffsetFace(3, ix+chunkX, iy, iz+chunkZ)...)
+				verticies = append(verticies, OffsetFace(4, ix+chunkX, iy, iz+chunkZ)...)
+				verticies = append(verticies, OffsetFace(5, ix+chunkX, iy, iz+chunkZ)...)
 			}
 		}
 	}

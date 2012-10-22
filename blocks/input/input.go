@@ -7,6 +7,7 @@ var (
 )
 
 func Init() {
+	glfw.Disable(glfw.MouseCursor)
 	glfw.SetMousePosCallback(OnMouseMove)
 }
 
@@ -20,4 +21,8 @@ func MouseX() float32 {
 
 func MouseY() float32 {
 	return float32(mouseY)
+}
+
+func IsKeyDown(key int) bool {
+	return glfw.Key(key) == glfw.KeyPress
 }

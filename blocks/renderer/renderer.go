@@ -117,6 +117,8 @@ func Tick() {
 
 	program.Use()
 
+	camera.UpdateModelViewMatrix()
+
 	modelViewMatrixUniform.UniformMatrix4fv(camera.modelViewMatrix[:])
 	projectionMatrixUniform.UniformMatrix4fv(camera.projectionMatrix[:])
 	timerUniform.Uniform1f(timer)

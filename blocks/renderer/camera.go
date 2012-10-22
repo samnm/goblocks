@@ -2,18 +2,18 @@ package renderer
 
 import (
 	"math"
+	"sam.vg/goblocks/blocks/input"
+	"sam.vg/util/matrix"
 )
 
 type Camera struct {
-	modelViewMatrix  [16]float32
+	modelViewMatrix  *matrix.Matrix4
 	projectionMatrix [16]float32
 	eyePosition      [3]float32
 }
 
 func NewCamera(viewWidth, viewHeight int) *Camera {
 	camera := &Camera{}
-	camera.projectionMatrix = [16]float32{}
-	camera.modelViewMatrix = [16]float32{}
 	camera.eyePosition = [3]float32{5.0, 10.0, -5.0}
 
 	camera.UpdateProjectionMatrix(viewWidth, viewHeight)
@@ -59,23 +59,8 @@ func (c *Camera) UpdateProjectionMatrix(width, height int) {
 }
 
 func (c *Camera) UpdateModelViewMatrix() {
-	c.modelViewMatrix[0] = 1.0
-	c.modelViewMatrix[1] = 0.0
-	c.modelViewMatrix[2] = 0.0
-	c.modelViewMatrix[3] = 0.0
-
-	c.modelViewMatrix[4] = 0.0
-	c.modelViewMatrix[5] = 1.0
-	c.modelViewMatrix[6] = 0.0
-	c.modelViewMatrix[7] = 0.0
-
-	c.modelViewMatrix[8] = 0.0
-	c.modelViewMatrix[9] = 0.0
-	c.modelViewMatrix[10] = 1.0
-	c.modelViewMatrix[11] = 0.0
-
-	c.modelViewMatrix[12] = -c.eyePosition[0]
-	c.modelViewMatrix[13] = -c.eyePosition[1]
-	c.modelViewMatrix[14] = -c.eyePosition[2]
-	c.modelViewMatrix[15] = 1.0
+	c.modelViewMatrix = matrix.MakeRotationMatrix(-input.MouseY()/100.0, 1, 0, 0)
+	c.modelViewMatrix = c.modelViewMatrix.Multiply(matrix.MakeRotationMatrix(-input.MouseX()/100.0, 0, 1, 0))
+	c.modelViewMatrix = c.modelViewMatrix.Multiply(matrix.MakeTranslationMatrix(-c.eyePosition[0], -c.eyePosition[1], -c.eyePosition[2]))
+	c.modelViewMatrix.Transpose()
 }

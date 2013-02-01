@@ -6,7 +6,7 @@ import (
 	"github.com/go-gl/glfw"
 	"os"
 	"sam.vg/goblocks/blocks"
-	"sam.vg/util/fps"
+	"sam.vg/goblocks/util/fps"
 )
 
 const (

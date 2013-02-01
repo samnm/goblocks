@@ -4,7 +4,7 @@ import (
 	"github.com/go-gl/glfw"
 	"math"
 	"sam.vg/goblocks/blocks/input"
-	"sam.vg/util/matrix"
+	"sam.vg/goblocks/util/matrix"
 )
 
 type Camera struct {

@@ -9,10 +9,15 @@ var (
 func Init() {
 	glfw.Disable(glfw.MouseCursor)
 	glfw.SetMousePosCallback(OnMouseMove)
+	glfw.SetMouseButtonCallback(OnMouseClick)
 }
 
 func OnMouseMove(x, y int) {
 	mouseX, mouseY = x, y
+}
+
+func OnMouseClick(button, state int) {
+
 }
 
 func MouseX() float32 {

@@ -2,9 +2,9 @@ package renderer
 
 import (
 	"github.com/go-gl/glfw"
+	"github.com/samnm/goblocks/blocks/input"
+	"github.com/samnm/goblocks/util/matrix"
 	"math"
-	"sam.vg/goblocks/blocks/input"
-	"sam.vg/goblocks/util/matrix"
 )
 
 type Camera struct {

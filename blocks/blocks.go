@@ -1,8 +1,8 @@
 package blocks
 
 import (
-	"sam.vg/goblocks/blocks/input"
-	"sam.vg/goblocks/blocks/renderer"
+	"github.com/samnm/goblocks/blocks/input"
+	"github.com/samnm/goblocks/blocks/renderer"
 )
 
 func Init(width, height int) {

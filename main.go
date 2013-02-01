@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"github.com/go-gl/gl"
 	"github.com/go-gl/glfw"
+	"github.com/samnm/goblocks/blocks"
+	"github.com/samnm/goblocks/util/fps"
 	"os"
-	"sam.vg/goblocks/blocks"
-	"sam.vg/goblocks/util/fps"
 )
 
 const (
